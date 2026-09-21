@@ -1,9 +1,11 @@
 package com.dolcy.atmos;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.media.AudioManager;
 import android.media.audiofx.BassBoost;
 import android.media.audiofx.Equalizer;
 import android.media.audiofx.Virtualizer;
@@ -30,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
     private Virtualizer virtualizer;
     private Equalizer equalizer;
     private Visualizer audioVisualizer;
+    private AudioManager audioManager;
 
     private SwitchCompat switchDolby;
     private Button btnDynamic, btnMovie, btnMusic, btnVoice;
@@ -39,18 +42,20 @@ public class MainActivity extends AppCompatActivity {
     private Handler animHandler = new Handler(Looper.getMainLooper());
     private Runnable waveRunnable;
     private Random random = new Random();
-    private boolean isVisualizerActive = true;
+    private boolean isDolbyEnabled = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
         initViews();
         initAudioEffects();
         setupListeners();
         requestAudioPermission();
-        startDynamicWaveEngine();
+        startMusicDetectionEngine();
     }
 
     private void initViews() {
@@ -72,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
         bars[5] = findViewById(R.id.bar6);
         bars[6] = findViewById(R.id.bar7);
 
+        resetBarsToFlat();
         applyProfile("Dynamic");
     }
 
@@ -117,8 +123,10 @@ public class MainActivity extends AppCompatActivity {
             audioVisualizer.setDataCaptureListener(new Visualizer.OnDataCaptureListener() {
                 @Override
                 public void onWaveFormDataCapture(Visualizer visualizer, byte[] waveform, int samplingRate) {
-                    if (waveform != null && waveform.length >= 7) {
-                        runOnUiThread(() -> updateBarsFromAudio(waveform));
+                    if (isDolbyEnabled && audioManager != null && audioManager.isMusicActive()) {
+                        if (waveform != null && waveform.length >= 7) {
+                            runOnUiThread(() -> updateBarsFromWave(waveform));
+                        }
                     }
                 }
 
@@ -130,30 +138,36 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception ignored) {}
     }
 
-    private void updateBarsFromAudio(byte[] waveform) {
+    private void updateBarsFromWave(byte[] waveform) {
         for (int i = 0; i < 7; i++) {
             int raw = Math.abs((int) waveform[i * (waveform.length / 7)]);
-            int targetHeight = Math.max(30, Math.min(220, raw * 3));
+            int targetHeight = Math.max(25, Math.min(220, raw * 3));
             ViewGroup.LayoutParams params = bars[i].getLayoutParams();
             params.height = targetHeight;
             bars[i].setLayoutParams(params);
         }
     }
 
-    private void startDynamicWaveEngine() {
+    // Checks live playback: only dances when music is actually playing on the phone
+    private void startMusicDetectionEngine() {
         waveRunnable = new Runnable() {
             @Override
             public void run() {
-                if (isVisualizerActive) {
+                boolean isMusicPlaying = audioManager != null && audioManager.isMusicActive();
+
+                if (isDolbyEnabled && isMusicPlaying) {
                     for (int i = 0; i < 7; i++) {
                         int base = 35;
-                        int variance = random.nextInt(160);
+                        int variance = random.nextInt(165);
                         int targetHeight = base + variance;
 
                         ViewGroup.LayoutParams params = bars[i].getLayoutParams();
                         params.height = targetHeight;
                         bars[i].setLayoutParams(params);
                     }
+                } else {
+                    // Smoothly fall down to flat when music stops or paused
+                    resetBarsToFlat();
                 }
                 animHandler.postDelayed(this, 100);
             }
@@ -161,20 +175,28 @@ public class MainActivity extends AppCompatActivity {
         animHandler.post(waveRunnable);
     }
 
+    private void resetBarsToFlat() {
+        for (View bar : bars) {
+            if (bar != null) {
+                ViewGroup.LayoutParams params = bar.getLayoutParams();
+                if (params.height != 20) {
+                    params.height = 20;
+                    bar.setLayoutParams(params);
+                }
+            }
+        }
+    }
+
     private void setupListeners() {
         switchDolby.setOnCheckedChangeListener((btn, isChecked) -> {
-            isVisualizerActive = isChecked;
+            isDolbyEnabled = isChecked;
             if (bassBoost != null) bassBoost.setEnabled(isChecked);
             if (virtualizer != null) virtualizer.setEnabled(isChecked);
             if (equalizer != null) equalizer.setEnabled(isChecked);
             if (audioVisualizer != null) audioVisualizer.setEnabled(isChecked);
 
             if (!isChecked) {
-                for (View bar : bars) {
-                    ViewGroup.LayoutParams params = bar.getLayoutParams();
-                    params.height = 20;
-                    bar.setLayoutParams(params);
-                }
+                resetBarsToFlat();
             }
         });
 
