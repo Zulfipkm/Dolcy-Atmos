@@ -5,7 +5,10 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.media.AudioAttributes;
+import android.media.AudioFormat;
 import android.media.AudioManager;
+import android.media.AudioTrack;
 import android.media.audiofx.BassBoost;
 import android.media.audiofx.Equalizer;
 import android.media.audiofx.Virtualizer;
@@ -16,6 +19,7 @@ import android.os.Looper;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -39,6 +43,9 @@ public class MainActivity extends AppCompatActivity {
     private SeekBar sbBass, sbSurround, sbClarity;
     private View[] bars = new View[7];
 
+    private View splashOverlay;
+    private ImageView splashIcon;
+
     private Handler animHandler = new Handler(Looper.getMainLooper());
     private Runnable waveRunnable;
     private Random random = new Random();
@@ -54,11 +61,19 @@ public class MainActivity extends AppCompatActivity {
         initViews();
         initAudioEffects();
         setupListeners();
-        requestAudioPermission();
         startMusicDetectionEngine();
+
+        // Safe Splash Timeout & Sound
+        playSpatialTone();
+        handleSplashDismiss();
+
+        requestAudioPermission();
     }
 
     private void initViews() {
+        splashOverlay = findViewById(R.id.splashOverlay);
+        splashIcon = findViewById(R.id.splashIcon);
+
         switchDolby = findViewById(R.id.switchDolby);
         btnDynamic = findViewById(R.id.btnDynamic);
         btnMovie = findViewById(R.id.btnMovie);
@@ -79,6 +94,70 @@ public class MainActivity extends AppCompatActivity {
 
         resetBarsToFlat();
         applyProfile("Dynamic");
+    }
+
+    private void handleSplashDismiss() {
+        if (splashIcon != null) {
+            splashIcon.animate()
+                    .scaleX(1.05f)
+                    .scaleY(1.05f)
+                    .alpha(1.0f)
+                    .setDuration(900)
+                    .start();
+        }
+
+        // Fixed 1.8 seconds timeout - Stuck aavilla, automatically disappear aakum
+        animHandler.postDelayed(() -> {
+            if (splashOverlay != null) {
+                splashOverlay.animate()
+                        .alpha(0.0f)
+                        .setDuration(400)
+                        .withEndAction(() -> splashOverlay.setVisibility(View.GONE))
+                        .start();
+            }
+        }, 1800);
+    }
+
+    private void playSpatialTone() {
+        new Thread(() -> {
+            AudioTrack track = null;
+            try {
+                int sampleRate = 44100;
+                int durationMs = 1200;
+                int count = (sampleRate * durationMs) / 1000;
+                short[] samples = new short[count * 2];
+
+                for (int i = 0; i < count; i++) {
+                    double progress = (double) i / count;
+                    double freq = 70.0 + (progress * 180.0);
+                    double angle = 2.0 * Math.PI * i / (sampleRate / freq);
+                    double envelope = Math.sin(Math.PI * progress);
+                    short val = (short) (Math.sin(angle) * envelope * 24000);
+
+                    // 3D stereo sweep (left to right)
+                    samples[i * 2] = (short) (val * (1.0 - progress));
+                    samples[i * 2 + 1] = (short) (val * progress);
+                }
+
+                track = new AudioTrack.Builder()
+                        .setAudioAttributes(new AudioAttributes.Builder()
+                                .setUsage(AudioAttributes.USAGE_MEDIA)
+                                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                                .build())
+                        .setAudioFormat(new AudioFormat.Builder()
+                                .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                                .setSampleRate(sampleRate)
+                                .setChannelMask(AudioFormat.CHANNEL_OUT_STEREO)
+                                .build())
+                        .setBufferSizeInBytes(samples.length * 2)
+                        .setTransferMode(AudioTrack.MODE_STATIC)
+                        .build();
+
+                track.write(samples, 0, samples.length);
+                track.play();
+            } catch (Exception ignored) {
+            }
+        }).start();
     }
 
     private void initAudioEffects() {
@@ -148,7 +227,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Checks live playback: only dances when music is actually playing on the phone
     private void startMusicDetectionEngine() {
         waveRunnable = new Runnable() {
             @Override
@@ -166,7 +244,6 @@ public class MainActivity extends AppCompatActivity {
                         bars[i].setLayoutParams(params);
                     }
                 } else {
-                    // Smoothly fall down to flat when music stops or paused
                     resetBarsToFlat();
                 }
                 animHandler.postDelayed(this, 100);
