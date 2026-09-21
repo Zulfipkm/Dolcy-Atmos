@@ -1,218 +1,145 @@
-<?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#090A0F"
-    android:fillViewport="true">
+          package com.dolcy.atmos;
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="22dp">
+import android.content.res.ColorStateList;
+import android.graphics.Color;
+import android.media.audiofx.BassBoost;
+import android.media.audiofx.Equalizer;
+import android.media.audiofx.Virtualizer;
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.SeekBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 
-        <!-- Top Bar with Dolby Atmos Branding -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+public class MainActivity extends AppCompatActivity {
 
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
+    private BassBoost bassBoost;
+    private Virtualizer virtualizer;
+    private Equalizer equalizer;
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="DOLBY ATMOS"
-                    android:textColor="#FFFFFF"
-                    android:textSize="22sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.12" />
+    private SwitchCompat switchDolby;
+    private Button btnDynamic, btnMovie, btnMusic, btnVoice;
+    private SeekBar sbBass, sbSurround, sbClarity;
 
-                <TextView
-                    android:id="@+id/tvDeviceStatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="Connected • Built-in Speakers"
-                    android:textColor="#808093"
-                    android:textSize="12sp" />
-            </LinearLayout>
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/switchDolby"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true" />
-        </LinearLayout>
+        initAudioEffects();
+        initViews();
+        setupListeners();
+    }
 
-        <!-- Dynamic Profile Card -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="26dp"
-            android:background="#141622"
-            android:orientation="vertical"
-            android:padding="18dp">
+    private void initAudioEffects() {
+        try {
+            bassBoost = new BassBoost(0, 0);
+            bassBoost.setEnabled(true);
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="PROFILES"
-                android:textColor="#5E5CE6"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.1" />
+            virtualizer = new Virtualizer(0, 0);
+            virtualizer.setEnabled(true);
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:orientation="horizontal"
-                android:weightSum="4">
+            equalizer = new Equalizer(0, 0);
+            equalizer.setEnabled(true);
+        } catch (Exception ignored) {}
+    }
 
-                <Button
-                    android:id="@+id/btnDynamic"
-                    android:layout_width="0dp"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="4dp"
-                    android:layout_weight="1"
-                    android:backgroundTint="#5E5CE6"
-                    android:text="Dynamic"
-                    android:textAllCaps="false"
-                    android:textColor="#FFFFFF"
-                    android:textSize="11sp" />
+    private void initViews() {
+        switchDolby = findViewById(R.id.switchDolby);
+        btnDynamic = findViewById(R.id.btnDynamic);
+        btnMovie = findViewById(R.id.btnMovie);
+        btnMusic = findViewById(R.id.btnMusic);
+        btnVoice = findViewById(R.id.btnVoice);
 
-                <Button
-                    android:id="@+id/btnMovie"
-                    android:layout_width="0dp"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="4dp"
-                    android:layout_weight="1"
-                    android:backgroundTint="#1F2235"
-                    android:text="Movie"
-                    android:textAllCaps="false"
-                    android:textColor="#A0A0B5"
-                    android:textSize="11sp" />
+        sbBass = findViewById(R.id.sbBass);
+        sbSurround = findViewById(R.id.sbSurround);
+        sbClarity = findViewById(R.id.sbClarity);
 
-                <Button
-                    android:id="@+id/btnMusic"
-                    android:layout_width="0dp"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="4dp"
-                    android:layout_weight="1"
-                    android:backgroundTint="#1F2235"
-                    android:text="Music"
-                    android:textAllCaps="false"
-                    android:textColor="#A0A0B5"
-                    android:textSize="11sp" />
+        applyProfile("Dynamic");
+    }
 
-                <Button
-                    android:id="@+id/btnVoice"
-                    android:layout_width="0dp"
-                    android:layout_height="40dp"
-                    android:layout_weight="1"
-                    android:backgroundTint="#1F2235"
-                    android:text="Voice"
-                    android:textAllCaps="false"
-                    android:textColor="#A0A0B5"
-                    android:textSize="11sp" />
-            </LinearLayout>
-        </LinearLayout>
+    private void setupListeners() {
+        switchDolby.setOnCheckedChangeListener((btn, isChecked) -> {
+            if (bassBoost != null) bassBoost.setEnabled(isChecked);
+            if (virtualizer != null) virtualizer.setEnabled(isChecked);
+            if (equalizer != null) equalizer.setEnabled(isChecked);
+        });
 
-        <!-- Intelligent Equalizer Controls -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
-            android:text="INTELLIGENT EQUALIZER"
-            android:textColor="#5E5CE6"
-            android:textSize="11sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.1" />
+        sbBass.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (bassBoost != null && bassBoost.getStrengthSupported()) {
+                    try {
+                        bassBoost.setStrength((short) progress);
+                    } catch (Exception ignored) {}
+                }
+            }
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
 
-        <!-- Bass Enhancer -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:background="#141622"
-            android:orientation="vertical"
-            android:padding="16dp">
+        sbSurround.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (virtualizer != null && virtualizer.getStrengthSupported()) {
+                    try {
+                        virtualizer.setStrength((short) progress);
+                    } catch (Exception ignored) {}
+                }
+            }
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Bass Enhancer"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+        btnDynamic.setOnClickListener(v -> applyProfile("Dynamic"));
+        btnMovie.setOnClickListener(v -> applyProfile("Movie"));
+        btnMusic.setOnClickListener(v -> applyProfile("Music"));
+        btnVoice.setOnClickListener(v -> applyProfile("Voice"));
+    }
 
-            <SeekBar
-                android:id="@+id/sbBass"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:max="1000"
-                android:progress="650" />
-        </LinearLayout>
+    private void applyProfile(String profile) {
+        resetButtons();
+        switch (profile) {
+            case "Dynamic":
+                highlightButton(btnDynamic);
+                sbBass.setProgress(700);
+                sbSurround.setProgress(800);
+                sbClarity.setProgress(600);
+                break;
+            case "Movie":
+                highlightButton(btnMovie);
+                sbBass.setProgress(850);
+                sbSurround.setProgress(1000);
+                sbClarity.setProgress(750);
+                break;
+            case "Music":
+                highlightButton(btnMusic);
+                sbBass.setProgress(600);
+                sbSurround.setProgress(500);
+                sbClarity.setProgress(500);
+                break;
+            case "Voice":
+                highlightButton(btnVoice);
+                sbBass.setProgress(200);
+                sbSurround.setProgress(300);
+                sbClarity.setProgress(900);
+                break;
+        }
+    }
 
-        <!-- 3D Surround Virtualizer -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:background="#141622"
-            android:orientation="vertical"
-            android:padding="16dp">
+    private void resetButtons() {
+        int inactiveColor = Color.parseColor("#1F2235");
+        int textInactive = Color.parseColor("#A0A0B5");
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Surround Virtualizer (3D)"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+        Button[] buttons = {btnDynamic, btnMovie, btnMusic, btnVoice};
+        for (Button btn : buttons) {
+            btn.setBackgroundTintList(ColorStateList.valueOf(inactiveColor));
+            btn.setTextColor(textInactive);
+        }
+    }
 
-            <SeekBar
-                android:id="@+id/sbSurround"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:max="1000"
-                android:progress="800" />
-        </LinearLayout>
-
-        <!-- Dialogue Clarity / Volume Leveler -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:background="#141622"
-            android:orientation="vertical"
-            android:padding="16dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Dialogue Clarity"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <SeekBar
-                android:id="@+id/sbClarity"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:max="1000"
-                android:progress="500" />
-        </LinearLayout>
-
-    </LinearLayout>
-</ScrollView>
+    private void highlightButton(Button btn) {
+        btn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#5E5CE6")));
+        btn.setTextColor(Color.WHITE);
+    }
+}
