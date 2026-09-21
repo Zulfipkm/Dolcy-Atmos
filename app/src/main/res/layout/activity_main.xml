@@ -43,7 +43,6 @@
                     android:textColor="#808093"
                     android:textSize="12sp" />
 
-                <!-- Developer Credit -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -61,11 +60,65 @@
                 android:checked="true" />
         </LinearLayout>
 
-        <!-- Dynamic Profile Card -->
+        <!-- Dynamic Sound Visualizer Card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:layout_marginTop="20dp"
+            android:background="#141622"
+            android:gravity="bottom|center_horizontal"
+            android:orientation="horizontal"
+            android:padding="16dp">
+
+            <View
+                android:id="@+id/bar1"
+                android:layout_width="10dp"
+                android:layout_height="30dp"
+                android:layout_marginHorizontal="4dp"
+                android:background="#5E5CE6" />
+            <View
+                android:id="@+id/bar2"
+                android:layout_width="10dp"
+                android:layout_height="50dp"
+                android:layout_marginHorizontal="4dp"
+                android:background="#7D7AFF" />
+            <View
+                android:id="@+id/bar3"
+                android:layout_width="10dp"
+                android:layout_height="20dp"
+                android:layout_marginHorizontal="4dp"
+                android:background="#5E5CE6" />
+            <View
+                android:id="@+id/bar4"
+                android:layout_width="10dp"
+                android:layout_height="65dp"
+                android:layout_marginHorizontal="4dp"
+                android:background="#9D9BFF" />
+            <View
+                android:id="@+id/bar5"
+                android:layout_width="10dp"
+                android:layout_height="40dp"
+                android:layout_marginHorizontal="4dp"
+                android:background="#5E5CE6" />
+            <View
+                android:id="@+id/bar6"
+                android:layout_width="10dp"
+                android:layout_height="55dp"
+                android:layout_marginHorizontal="4dp"
+                android:background="#7D7AFF" />
+            <View
+                android:id="@+id/bar7"
+                android:layout_width="10dp"
+                android:layout_height="30dp"
+                android:layout_marginHorizontal="4dp"
+                android:background="#5E5CE6" />
+        </LinearLayout>
+
+        <!-- Profiles Section -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="20dp"
             android:background="#141622"
             android:orientation="vertical"
             android:padding="18dp">
@@ -139,18 +192,17 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
+            android:layout_marginTop="26dp"
             android:text="INTELLIGENT EQUALIZER"
             android:textColor="#5E5CE6"
             android:textSize="11sp"
             android:textStyle="bold"
             android:letterSpacing="0.1" />
 
-        <!-- Bass Enhancer -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="14dp"
             android:background="#141622"
             android:orientation="vertical"
             android:padding="16dp">
@@ -172,7 +224,6 @@
                 android:progress="650" />
         </LinearLayout>
 
-        <!-- 3D Surround Virtualizer -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -198,7 +249,6 @@
                 android:progress="800" />
         </LinearLayout>
 
-        <!-- Dialogue Clarity -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
