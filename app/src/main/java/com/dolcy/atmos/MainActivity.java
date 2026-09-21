@@ -9,6 +9,8 @@ import android.media.audiofx.Equalizer;
 import android.media.audiofx.Virtualizer;
 import android.media.audiofx.Visualizer;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -18,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -33,6 +36,11 @@ public class MainActivity extends AppCompatActivity {
     private SeekBar sbBass, sbSurround, sbClarity;
     private View[] bars = new View[7];
 
+    private Handler animHandler = new Handler(Looper.getMainLooper());
+    private Runnable waveRunnable;
+    private Random random = new Random();
+    private boolean isVisualizerActive = true;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
         initAudioEffects();
         setupListeners();
         requestAudioPermission();
+        startDynamicWaveEngine();
     }
 
     private void initViews() {
@@ -85,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.RECORD_AUDIO}, REQ_AUDIO_PERMISSION);
         } else {
-            startLiveVisualizer();
+            attachSystemVisualizer();
         }
     }
 
@@ -94,11 +103,11 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQ_AUDIO_PERMISSION && grantResults.length > 0
                 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            startLiveVisualizer();
+            attachSystemVisualizer();
         }
     }
 
-    private void startLiveVisualizer() {
+    private void attachSystemVisualizer() {
         try {
             if (audioVisualizer != null) {
                 audioVisualizer.release();
@@ -109,15 +118,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onWaveFormDataCapture(Visualizer visualizer, byte[] waveform, int samplingRate) {
                     if (waveform != null && waveform.length >= 7) {
-                        runOnUiThread(() -> {
-                            for (int i = 0; i < 7; i++) {
-                                int raw = Math.abs((int) waveform[i * (waveform.length / 7)]);
-                                int targetHeight = Math.max(30, Math.min(220, raw * 3));
-                                ViewGroup.LayoutParams params = bars[i].getLayoutParams();
-                                params.height = targetHeight;
-                                bars[i].setLayoutParams(params);
-                            }
-                        });
+                        runOnUiThread(() -> updateBarsFromAudio(waveform));
                     }
                 }
 
@@ -129,12 +130,52 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception ignored) {}
     }
 
+    private void updateBarsFromAudio(byte[] waveform) {
+        for (int i = 0; i < 7; i++) {
+            int raw = Math.abs((int) waveform[i * (waveform.length / 7)]);
+            int targetHeight = Math.max(30, Math.min(220, raw * 3));
+            ViewGroup.LayoutParams params = bars[i].getLayoutParams();
+            params.height = targetHeight;
+            bars[i].setLayoutParams(params);
+        }
+    }
+
+    private void startDynamicWaveEngine() {
+        waveRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (isVisualizerActive) {
+                    for (int i = 0; i < 7; i++) {
+                        int base = 35;
+                        int variance = random.nextInt(160);
+                        int targetHeight = base + variance;
+
+                        ViewGroup.LayoutParams params = bars[i].getLayoutParams();
+                        params.height = targetHeight;
+                        bars[i].setLayoutParams(params);
+                    }
+                }
+                animHandler.postDelayed(this, 100);
+            }
+        };
+        animHandler.post(waveRunnable);
+    }
+
     private void setupListeners() {
         switchDolby.setOnCheckedChangeListener((btn, isChecked) -> {
+            isVisualizerActive = isChecked;
             if (bassBoost != null) bassBoost.setEnabled(isChecked);
             if (virtualizer != null) virtualizer.setEnabled(isChecked);
             if (equalizer != null) equalizer.setEnabled(isChecked);
             if (audioVisualizer != null) audioVisualizer.setEnabled(isChecked);
+
+            if (!isChecked) {
+                for (View bar : bars) {
+                    ViewGroup.LayoutParams params = bar.getLayoutParams();
+                    params.height = 20;
+                    bar.setLayoutParams(params);
+                }
+            }
         });
 
         sbBass.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -219,5 +260,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         if (audioVisualizer != null) audioVisualizer.release();
+        if (animHandler != null && waveRunnable != null) {
+            animHandler.removeCallbacks(waveRunnable);
+        }
     }
 }
