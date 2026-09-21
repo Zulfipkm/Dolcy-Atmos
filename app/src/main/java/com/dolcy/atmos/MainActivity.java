@@ -1,70 +1,218 @@
-package com.dolcy.atmos;
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#090A0F"
+    android:fillViewport="true">
 
-import android.media.audiofx.Equalizer;
-import android.os.Bundle;
-import android.widget.LinearLayout;
-import android.widget.SeekBar;
-import android.widget.TextView;
-import androidx.appcompat.app.AppCompatActivity;
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="22dp">
 
-public class MainActivity extends AppCompatActivity {
+        <!-- Top Bar with Dolby Atmos Branding -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-    private Equalizer equalizer;
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="DOLBY ATMOS"
+                    android:textColor="#FFFFFF"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.12" />
 
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(32, 32, 32, 32);
+                <TextView
+                    android:id="@+id/tvDeviceStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Connected • Built-in Speakers"
+                    android:textColor="#808093"
+                    android:textSize="12sp" />
+            </LinearLayout>
 
-        TextView title = new TextView(this);
-        title.setText("Dolcy Atmos Equalizer");
-        title.setTextSize(22);
-        layout.addView(title);
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchDolby"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true" />
+        </LinearLayout>
 
-        try {
-            equalizer = new Equalizer(0, 0);
-            equalizer.setEnabled(true);
+        <!-- Dynamic Profile Card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="26dp"
+            android:background="#141622"
+            android:orientation="vertical"
+            android:padding="18dp">
 
-            short bands = equalizer.getNumberOfBands();
-            final short minLevel = equalizer.getBandLevelRange()[0];
-            final short maxLevel = equalizer.getBandLevelRange()[1];
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="PROFILES"
+                android:textColor="#5E5CE6"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.1" />
 
-            for (short i = 0; i < bands; i++) {
-                final short band = i;
-                TextView freqView = new TextView(this);
-                freqView.setText((equalizer.getCenterFreq(band) / 1000) + " Hz");
-                layout.addView(freqView);
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:orientation="horizontal"
+                android:weightSum="4">
 
-                SeekBar seekBar = new SeekBar(this);
-                seekBar.setMax(maxLevel - minLevel);
-                seekBar.setProgress(equalizer.getBandLevel(band) - minLevel);
-                seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                    @Override
-                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                        equalizer.setBandLevel(band, (short) (progress + minLevel));
-                    }
-                    @Override public void onStartTrackingTouch(SeekBar seekBar) {}
-                    @Override public void onStopTrackingTouch(SeekBar seekBar) {}
-                });
-                layout.addView(seekBar);
-            }
-        } catch (Exception e) {
-            TextView errorView = new TextView(this);
-            errorView.setText("No global audio session available.");
-            layout.addView(errorView);
-        }
+                <Button
+                    android:id="@+id/btnDynamic"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="4dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="#5E5CE6"
+                    android:text="Dynamic"
+                    android:textAllCaps="false"
+                    android:textColor="#FFFFFF"
+                    android:textSize="11sp" />
 
-        setContentView(layout);
-    }
+                <Button
+                    android:id="@+id/btnMovie"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="4dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="#1F2235"
+                    android:text="Movie"
+                    android:textAllCaps="false"
+                    android:textColor="#A0A0B5"
+                    android:textSize="11sp" />
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (equalizer != null) {
-            equalizer.release();
-        }
-    }
-}
+                <Button
+                    android:id="@+id/btnMusic"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="4dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="#1F2235"
+                    android:text="Music"
+                    android:textAllCaps="false"
+                    android:textColor="#A0A0B5"
+                    android:textSize="11sp" />
+
+                <Button
+                    android:id="@+id/btnVoice"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="#1F2235"
+                    android:text="Voice"
+                    android:textAllCaps="false"
+                    android:textColor="#A0A0B5"
+                    android:textSize="11sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Intelligent Equalizer Controls -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:text="INTELLIGENT EQUALIZER"
+            android:textColor="#5E5CE6"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.1" />
+
+        <!-- Bass Enhancer -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="#141622"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Bass Enhancer"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <SeekBar
+                android:id="@+id/sbBass"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:max="1000"
+                android:progress="650" />
+        </LinearLayout>
+
+        <!-- 3D Surround Virtualizer -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="#141622"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Surround Virtualizer (3D)"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <SeekBar
+                android:id="@+id/sbSurround"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:max="1000"
+                android:progress="800" />
+        </LinearLayout>
+
+        <!-- Dialogue Clarity / Volume Leveler -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="#141622"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dialogue Clarity"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <SeekBar
+                android:id="@+id/sbClarity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:max="1000"
+                android:progress="500" />
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>
