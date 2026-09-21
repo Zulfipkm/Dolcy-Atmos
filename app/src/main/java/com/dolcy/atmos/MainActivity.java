@@ -8,7 +8,6 @@ import android.media.audiofx.BassBoost;
 import android.media.audiofx.Equalizer;
 import android.media.audiofx.Virtualizer;
 import android.media.audiofx.Visualizer;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,12 +18,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import java.util.ArrayList;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int REQ_ALL_PERMISSIONS = 200;
+    private static final int REQ_AUDIO_PERMISSION = 101;
 
     private BassBoost bassBoost;
     private Virtualizer virtualizer;
@@ -44,9 +41,7 @@ public class MainActivity extends AppCompatActivity {
         initViews();
         initAudioEffects();
         setupListeners();
-
-        // Launch permissions immediately on app start
-        requestAllRequiredPermissions();
+        requestAudioPermission();
     }
 
     private void initViews() {
@@ -84,32 +79,11 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception ignored) {}
     }
 
-    private void requestAllRequiredPermissions() {
-        List<String> permissionsNeeded = new ArrayList<>();
-
+    private void requestAudioPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED) {
-            permissionsNeeded.add(Manifest.permission.RECORD_AUDIO);
-        }
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE)
-                != PackageManager.PERMISSION_GRANTED) {
-            permissionsNeeded.add(Manifest.permission.READ_PHONE_STATE);
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
-                    != PackageManager.PERMISSION_GRANTED) {
-                permissionsNeeded.add(Manifest.permission.POST_NOTIFICATIONS);
-            }
-        }
-
-        if (!permissionsNeeded.isEmpty()) {
-            ActivityCompat.requestPermissions(
-                    this,
-                    permissionsNeeded.toArray(new String[0]),
-                    REQ_ALL_PERMISSIONS
-            );
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.RECORD_AUDIO}, REQ_AUDIO_PERMISSION);
         } else {
             startLiveVisualizer();
         }
@@ -118,18 +92,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQ_ALL_PERMISSIONS) {
-            boolean audioGranted = false;
-            for (int i = 0; i < permissions.length; i++) {
-                if (permissions[i].equals(Manifest.permission.RECORD_AUDIO)
-                        && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                    audioGranted = true;
-                    break;
-                }
-            }
-            if (audioGranted) {
-                startLiveVisualizer();
-            }
+        if (requestCode == REQ_AUDIO_PERMISSION && grantResults.length > 0
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            startLiveVisualizer();
         }
     }
 
