@@ -12,6 +12,7 @@
         android:orientation="vertical"
         android:padding="22dp">
 
+        <!-- Top Bar with Dolby Atmos Branding -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -41,6 +42,16 @@
                     android:text="Connected • Built-in Speakers"
                     android:textColor="#808093"
                     android:textSize="12sp" />
+
+                <!-- Developer Credit -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:text="Developed by Sulfi Sulaiman"
+                    android:textColor="#7D7AFF"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
             </LinearLayout>
 
             <androidx.appcompat.widget.SwitchCompat
@@ -50,10 +61,11 @@
                 android:checked="true" />
         </LinearLayout>
 
+        <!-- Dynamic Profile Card -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="26dp"
+            android:layout_marginTop="24dp"
             android:background="#141622"
             android:orientation="vertical"
             android:padding="18dp">
@@ -123,6 +135,7 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!-- Intelligent Equalizer Controls -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -133,6 +146,7 @@
             android:textStyle="bold"
             android:letterSpacing="0.1" />
 
+        <!-- Bass Enhancer -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -158,6 +172,7 @@
                 android:progress="650" />
         </LinearLayout>
 
+        <!-- 3D Surround Virtualizer -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -183,6 +198,7 @@
                 android:progress="800" />
         </LinearLayout>
 
+        <!-- Dialogue Clarity -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
